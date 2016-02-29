@@ -12,7 +12,7 @@ namespace BdbPerformTest
     class BdbStorage
     {
         private readonly string _dbPAth;
-        private BTreeDatabase _btreeDb;
+        public BTreeDatabase _btreeDb;
         private BTreeDatabaseConfig _btreeConfig;
         private DatabaseEnvironment _env;
         private string _name;

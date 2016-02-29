@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BerkeleyDB;
 using System.Reflection;
 
+using System.Threading;
 namespace BdbPerformTest
 {
     class BdbPerformTest
@@ -56,7 +57,6 @@ namespace BdbPerformTest
             {
                 Stopwatch watch = new Stopwatch();
                 String BasePath = "C://BdbPerformanceTestFolder";
-                System.Console.WriteLine();
 
                 int envOpenTime = 0;
                 int baseOpenTime = 0;
@@ -70,7 +70,8 @@ namespace BdbPerformTest
                 int gettedTks;
                 int gettedTksLv2;
 
-                List<double> oneSpeeds = new List<double>();
+                List<double> oneSpeedsGet = new List<double>();
+                List<double> oneSpeedsSet = new List<double>();
 
                 int gettedElements = 0;
 
@@ -125,16 +126,27 @@ namespace BdbPerformTest
                     watch.Start();
                     BaseM1Ask.SetAll(listToAppend);
                     watch.Stop();
-                    if (oneBaseSetTime == 0)
-                        oneBaseSetTime += (int)watch.ElapsedMilliseconds;
+                    oneSpeedsSet.Add(1.0* RecordsNumber*1000/ watch.ElapsedMilliseconds);
                     multiBaseSetTime += (int)watch.ElapsedMilliseconds;
                     watch.Reset();
                     watch.Start();
                     BaseM1Bid.SetAll(listToAppend);
+                    watch.Stop();
+                    oneSpeedsSet.Add(1.0 * RecordsNumber * 1000 / watch.ElapsedMilliseconds);
+                    multiBaseSetTime += (int)watch.ElapsedMilliseconds;
+                    watch.Reset();
+                    watch.Start();
                     BaseTks.SetAll(listToAppend);
+                    watch.Stop();
+                    oneSpeedsSet.Add(1.0 * RecordsNumber * 1000 / watch.ElapsedMilliseconds);
+                    multiBaseSetTime += (int)watch.ElapsedMilliseconds;
+                    watch.Reset();
+                    watch.Start();
                     BaseTksL2.SetAll(listToAppend);
                     watch.Stop();
+                    oneSpeedsSet.Add(1.0 * RecordsNumber * 1000 / watch.ElapsedMilliseconds);
                     multiBaseSetTime += (int)watch.ElapsedMilliseconds;
+
 
                     
                     var listToGet = new List<KeyValuePair<DatabaseEntry, DatabaseEntry>>();
@@ -149,7 +161,7 @@ namespace BdbPerformTest
                     }
                     watch.Stop();
                     gettedElements += gettedM1ask;
-                    oneSpeeds.Add(1.0* gettedM1ask*1000/ watch.ElapsedMilliseconds);
+                    oneSpeedsGet.Add(1.0* gettedM1ask*1000/ watch.ElapsedMilliseconds);
                     multiBaseGetTime += (int)watch.ElapsedMilliseconds;
 
 
@@ -161,7 +173,7 @@ namespace BdbPerformTest
                     }
                     watch.Stop();
                     gettedElements += gettedM1bid;
-                    oneSpeeds.Add(1.0 * gettedM1bid * 1000 / watch.ElapsedMilliseconds);
+                    oneSpeedsGet.Add(1.0 * gettedM1bid * 1000 / watch.ElapsedMilliseconds);
                     multiBaseGetTime += (int)watch.ElapsedMilliseconds;
 
 
@@ -173,7 +185,7 @@ namespace BdbPerformTest
                     }
                     watch.Stop();
                     gettedElements += gettedTks;
-                    oneSpeeds.Add(1.0 * gettedTks * 1000 / watch.ElapsedMilliseconds);
+                    oneSpeedsGet.Add(1.0 * gettedTks * 1000 / watch.ElapsedMilliseconds);
                     multiBaseGetTime += (int)watch.ElapsedMilliseconds;
 
                     watch.Reset();
@@ -184,7 +196,7 @@ namespace BdbPerformTest
                     }
                     watch.Stop();
                     gettedElements += gettedTksLv2;
-                    oneSpeeds.Add(1.0 * gettedTksLv2 * 1000 / watch.ElapsedMilliseconds);
+                    oneSpeedsGet.Add(1.0 * gettedTksLv2 * 1000 / watch.ElapsedMilliseconds);
                     multiBaseGetTime += (int)watch.ElapsedMilliseconds;
 
                     BaseM1Ask.Close();
@@ -200,21 +212,123 @@ namespace BdbPerformTest
                 }
 
                 System.Console.WriteLine( "--- Bdb Performance Test with " + BaseNum.ToString() + " files with 4x" + BaseNum.ToString() + " databases and " + RecordsNumber + " records in each database ---\n");
-                System.Console.WriteLine( BaseNum.ToString() + " environements open time: " + envOpenTime.ToString() + " ms");
-                System.Console.WriteLine( BaseNum.ToString() + "x4" + " bases open time: " + baseOpenTime.ToString() + " ms");
-                System.Console.WriteLine( RecordsNumber.ToString() + " records setting to one base: " + oneBaseSetTime.ToString() + " ms");
-                System.Console.WriteLine( RecordsNumber.ToString() + "x4x" + BaseNum.ToString() + "=" + (RecordsNumber * 4 * BaseNum).ToString() + " records setting to all bases: " + multiBaseSetTime.ToString() + " ms");
-                System.Console.WriteLine("\nAll bases getting speed: " + (1.0 * gettedElements * 1000 / multiBaseGetTime).ToString() + " rec/s");
-                System.Console.WriteLine("\nOne base getting speed:");
-                System.Console.WriteLine("min\t:\t" + oneSpeeds.Min().ToString()+" rec/s");
-                System.Console.WriteLine("mean\t:\t" + oneSpeeds.Average(s => s).ToString() + " rec/s");
-                System.Console.WriteLine("max\t:\t" + oneSpeeds.Max().ToString() + " rec/s");
-                System.Console.WriteLine("\nGetting of all "+ gettedElements.ToString()+" records time: " + multiBaseGetTime.ToString() + " ms");
+                //System.Console.WriteLine( BaseNum.ToString() + " environements open time: " + envOpenTime.ToString() + " ms");
+                //System.Console.WriteLine( BaseNum.ToString() + "x4" + " bases open time: " + baseOpenTime.ToString() + " ms");
+                //System.Console.WriteLine( RecordsNumber.ToString() + " records setting to one base: " + oneBaseSetTime.ToString() + " ms");
+                //System.Console.WriteLine( RecordsNumber.ToString() + "x4x" + BaseNum.ToString() + "=" + (RecordsNumber * 4 * BaseNum).ToString() + " records setting to all bases: " + multiBaseSetTime.ToString() + " ms");
+
+                System.Console.WriteLine("All bases setting speed: \t\t" + (1.0 * RecordsNumber * 4 * BaseNum * 1000 / multiBaseSetTime).ToString() + " rec/s");
+                System.Console.WriteLine("One base setting speed: \t\t" + oneSpeedsSet.Average(s => s).ToString() + " rec/s");
+
+                System.Console.WriteLine("All bases getting speed: \t\t" + (1.0 * gettedElements * 1000 / multiBaseGetTime).ToString() + " rec/s");
+                System.Console.WriteLine("One base getting speed: \t\t" + oneSpeedsGet.Average(s => s).ToString() + " rec/s");
+
+                //System.Console.WriteLine("\nOne base getting speed:");
+                //System.Console.WriteLine("min\t:\t" + oneSpeedsGet.Min().ToString()+" rec/s");
+                //System.Console.WriteLine("mean\t:\t" + oneSpeedsGet.Average(s => s).ToString() + " rec/s");
+                //System.Console.WriteLine("max\t:\t" + oneSpeedsGet.Max().ToString() + " rec/s");
+                //System.Console.WriteLine("\nGetting of all "+ gettedElements.ToString()+" records time: " + multiBaseGetTime.ToString() + " ms");
                 System.Console.WriteLine("-----------------------------------------------\n\n\n");
 
 
             }
         }
+
+
+
+        public static void DoParallelTest(int RecordsNumber, string fileName1 = "0", string fileName2 = "0", bool useComEnv = true, bool twoBase = true)
+        {
+            {
+                Stopwatch watch = new Stopwatch();
+                String BasePath = "C://BdbPerformanceTestFolder";
+
+                int ReadWriteTime = 0;
+                DatabaseEnvironment env = null;
+                int baseFileID = 0;
+                Directory.CreateDirectory(BasePath + "//" + baseFileID.ToString());
+                if (useComEnv)
+                {
+                    var envConfig = new DatabaseEnvironmentConfig();
+                    envConfig.Create = true;
+                    envConfig.DataDirs.Add(BasePath + "//" + baseFileID.ToString());
+                    envConfig.CreationDir = BasePath + "//" + baseFileID.ToString();
+                    envConfig.ErrorPrefix = "QH_BDB_ENV_" + baseFileID.ToString();
+                    envConfig.UseLocking = true;
+                    envConfig.UseMPool = true;
+                    envConfig.FreeThreaded = true;
+
+                    
+                    env = DatabaseEnvironment.Open(BasePath + "//" + baseFileID.ToString(), envConfig);
+                }
+                BdbStorage BaseM1Ask;
+                BdbStorage BaseM1Bid;
+                if (twoBase)
+                {
+                    BaseM1Ask =
+                        new BdbStorage(BasePath + "//" + baseFileID.ToString() + "//" + fileName1 + ".db",
+                            "M1 ask", env);
+                    BaseM1Bid =
+                        new BdbStorage(BasePath + "//" + baseFileID.ToString() + "//" + fileName2 + ".db",
+                            "M1 bid", env);
+                }
+                else
+                {
+                    BaseM1Ask =
+                        new BdbStorage(BasePath + "//" + baseFileID.ToString() + "//" + fileName1 + ".db");
+                    BaseM1Bid = BaseM1Ask;
+                }
+
+
+                var listToAppend = new List<KeyValuePair<DatabaseEntry, DatabaseEntry>>();
+                var key = new DatabaseEntry();
+                var value = new DatabaseEntry();
+                for (int recNum = 0; recNum < RecordsNumber; recNum++)
+                {
+                        key = GetNextDBEntry(key);
+                        value = GetNextDBEntry(value);
+                        listToAppend.Add(new KeyValuePair<DatabaseEntry, DatabaseEntry>(key, value));
+                }
+
+
+                BaseM1Ask.SetAll(listToAppend);
+                var pt = new ParallelTester();
+                pt.storageToRead = BaseM1Ask;
+                pt.storageToWrite = BaseM1Bid;
+                pt.initialData = listToAppend;
+                watch.Reset();
+                watch.Start();
+                var thrRead = new Thread(pt.GetAll);
+                thrRead.Start();
+                var thrWrite = new Thread(pt.SetAll);
+                thrWrite.Start();
+                thrRead.Join();
+                thrWrite.Join();
+                watch.Stop();
+                ReadWriteTime += (int)watch.ElapsedMilliseconds;
+
+
+
+                BaseM1Ask.Close();
+                if(twoBase)
+                    BaseM1Bid.Close();
+                if(env!=null)
+                    env.Close();
+
+                Directory.Delete(BasePath, true);
+
+
+
+                //System.Console.WriteLine("Read/Write elapsed time: \t"+ ReadWriteTime.ToString()+" ms");
+                //System.Console.WriteLine("Records readed: \t\t" + pt.readCount.ToString()+"");
+                //System.Console.WriteLine("Records written: \t\t" + pt.writeCount.ToString() + "");
+                System.Console.WriteLine("Read speed: \t\t\t" + (1.0 * pt.readCount * 1000 / pt.readTime).ToString() + " rec/s");
+                System.Console.WriteLine("Write speed: \t\t\t" + (1.0 * pt.writeCount * 1000 / pt.writeTime).ToString() + " rec/s\n\n");
+                
+
+
+            }
+        }
+        
 
         static void Main(string[] args)
         {
@@ -227,11 +341,17 @@ namespace BdbPerformTest
                 pwd += ";" + Environment.GetEnvironmentVariable("PATH");
                 Environment.SetEnvironmentVariable("PATH", pwd);
             }
-            DoTest(1, 100000);
-            DoTest(1, 1000);
-            DoTest(50, 1000);
-            DoTest(1, 10000);
+            DoTest(1, 200000);
             DoTest(30, 10000);
+            System.Console.Write("PARALLEL(Two base in one file): \n");
+            DoParallelTest(300000);
+            System.Console.Write("PARALLEL(Two base in two file with common environement): \n");
+            DoParallelTest(300000,"0","1");
+            System.Console.Write("PARALLEL(Two base in two file without common environement): \n");
+            DoParallelTest(300000, "0", "1", false);
+            System.Console.Write("PARALLEL(One base): \n");
+            DoParallelTest(300000, "0", "1", false, false);
+
 
             System.Console.WriteLine("\nEnd of tests       ...press enter");
             Console.ReadLine();

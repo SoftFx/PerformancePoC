@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="BdbPerformTest.cs" />
     <Compile Include="BdbStorage.cs" />
+    <Compile Include="ParallelTester.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
