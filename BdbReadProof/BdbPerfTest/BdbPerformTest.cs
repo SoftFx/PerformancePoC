@@ -211,7 +211,9 @@ namespace BdbPerformTest
 
                 }
 
-                System.Console.WriteLine( "--- Bdb Performance Test with " + BaseNum.ToString() + " files with 4x" + BaseNum.ToString() + " databases and " + RecordsNumber + " records in each database ---\n");
+                System.Console.WriteLine( "Bdb Performance Test with " + BaseNum.ToString() + " files, in each file 4 database were created,\n"
+                    +"in each database "+ RecordsNumber + " records were written and then readed \n"+ "(all operations were performed successively, not parallel)\n"+
+                    "In summary we have:\t"+(BaseNum*4)+" databases, \t"+ (BaseNum * 4* RecordsNumber)+" records\n");
                 //System.Console.WriteLine( BaseNum.ToString() + " environements open time: " + envOpenTime.ToString() + " ms");
                 //System.Console.WriteLine( BaseNum.ToString() + "x4" + " bases open time: " + baseOpenTime.ToString() + " ms");
                 //System.Console.WriteLine( RecordsNumber.ToString() + " records setting to one base: " + oneBaseSetTime.ToString() + " ms");
@@ -228,7 +230,7 @@ namespace BdbPerformTest
                 //System.Console.WriteLine("mean\t:\t" + oneSpeedsGet.Average(s => s).ToString() + " rec/s");
                 //System.Console.WriteLine("max\t:\t" + oneSpeedsGet.Max().ToString() + " rec/s");
                 //System.Console.WriteLine("\nGetting of all "+ gettedElements.ToString()+" records time: " + multiBaseGetTime.ToString() + " ms");
-                System.Console.WriteLine("-----------------------------------------------\n\n\n");
+                System.Console.WriteLine("--- end of test\n\n");
 
 
             }
@@ -323,7 +325,7 @@ namespace BdbPerformTest
                 //System.Console.WriteLine("Records written: \t\t" + pt.writeCount.ToString() + "");
                 System.Console.WriteLine("Read speed: \t\t\t" + (1.0 * pt.readCount * 1000 / pt.readTime).ToString() + " rec/s");
                 System.Console.WriteLine("Write speed: \t\t\t" + (1.0 * pt.writeCount * 1000 / pt.writeTime).ToString() + " rec/s\n\n");
-                
+                System.Console.WriteLine("--- end of test\n\n");
 
 
             }
@@ -341,16 +343,17 @@ namespace BdbPerformTest
                 pwd += ";" + Environment.GetEnvironmentVariable("PATH");
                 Environment.SetEnvironmentVariable("PATH", pwd);
             }
-            DoTest(1, 200000);
+            DoTest(1, 500000);
+            DoTest(1, 5000000);
             DoTest(30, 10000);
-            System.Console.Write("PARALLEL(Two base in one file): \n");
-            DoParallelTest(300000);
-            System.Console.Write("PARALLEL(Two base in two file with common environement): \n");
-            DoParallelTest(300000,"0","1");
-            System.Console.Write("PARALLEL(Two base in two file without common environement): \n");
-            DoParallelTest(300000, "0", "1", false);
-            System.Console.Write("PARALLEL(One base): \n");
-            DoParallelTest(300000, "0", "1", false, false);
+            System.Console.Write("PARALLEL(Two base in one file) \nin this test we have 2 databases in 1 file\nreading were performing to one file and reading from other\n");
+            DoParallelTest(1000000);
+            System.Console.Write("PARALLEL(Two base in two file with common environement): \nin this test we have 2 databases opened with common evironement in 2 files\nwriting were performing to one file and reading from other\n");
+            DoParallelTest(1000000, "0","1");
+            System.Console.Write("PARALLEL(Two base in two file without common environement): \nin this test we have 2 databases opened without common evironement in 2 files\nwriting were performing to one file and reading from other\n");
+            DoParallelTest(1000000, "0", "1", false);
+            System.Console.Write("PARALLEL(One base): \nin this test we have 1 database\nreading and writing were performing with one database\n");
+            DoParallelTest(1000000, "0", "1", false, false);
 
 
             System.Console.WriteLine("\nEnd of tests       ...press enter");
